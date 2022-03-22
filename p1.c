@@ -57,20 +57,27 @@ int handler(state *global) {
 }
 
 int add_airport(state *global, char *in) {
+    char id[MAX_IDENTIFIER];
+    char country[MAX_COUNTRY_CHARS];
+    char city[MAX_CITY_CHARS];
+
+    strncpy(id, in + 2, strlen(in) - 2);
+    printf(id);
+
+
     if (global->airports_counter + 1 > MAX_AIRPORTS)
     {
         printf("too many airports");
         return 1;
     }
 
-    if (helper_find_same_id_airport(global, id))
-    {
-        print("duplicate airport");
-        return 1;
+    int len = sizeof(global->airports)/sizeof(global->airports[0]);
+    for (int i = 0; i < len; ++i) {
+        if(!strcmp(global->airports[i].id, id)) {   
+            printf("found!");
+        }
     }
 
-    
-    
     
     return 1;
 }
