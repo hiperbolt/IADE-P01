@@ -47,5 +47,14 @@ typedef struct {
     int max_passengers;
 } flight;
 
+typedef struct
+{
+    airport airports[MAX_AIRPORTS];
+    int airports_counter;
+    flight flights[MAX_FLIGHTS];
+    int flights_counter;
+    int date;
+
+} state;
 
 #endif
