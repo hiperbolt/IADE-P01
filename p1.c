@@ -61,8 +61,13 @@ int add_airport(state *global, char *in) {
     char country[MAX_COUNTRY_CHARS];
     char city[MAX_CITY_CHARS];
 
-    strncpy(id, in + 2, strlen(in) - 2);
-    printf(id);
+    char * pch;
+    pch = strtok (in," ");
+    while (pch != NULL)
+    {
+        printf ("%s\n",pch);
+        pch = strtok (NULL, " ,.-");
+    }
 
 
     if (global->airports_counter + 1 > MAX_AIRPORTS)
@@ -72,7 +77,7 @@ int add_airport(state *global, char *in) {
     }
 
     int len = sizeof(global->airports)/sizeof(global->airports[0]);
-    for (int i = 0; i < len; ++i) {
+    for (int i = 0; i < len; i++) {
         if(!strcmp(global->airports[i].id, id)) {   
             printf("found!");
         }
@@ -126,4 +131,5 @@ int binary_search(int array[], int target, int low, int high) {
   return -1; /* in case nothing was found */
 
 }
+
 
