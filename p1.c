@@ -30,11 +30,37 @@ int handler(state *global) {
         than using gets(). */
     fgets(in, 100, stdin);
 
+    /*  Input parsing.
+        We essentially divide the array copied from stdin
+        to a new multidimensional array, where every
+        new vector is a whitespace separated token.
+
+        This is an ugly (and probably
+        not very memory safe) implementation and should
+        be improved.
+    */
+
+    /* TODO: GARANTE QUE O ULTIMO TOKEN É PARSED CORRETAMENTE */
+    char arguments[100][100];
+    char * pch;
+    pch = strtok (in," ");
+    strcpy(arguments[0], pch);
+    int i = 1;
+    while (pch != NULL)
+    {
+        pch = strtok (NULL, " ");
+        if (pch != NULL) {
+        strcpy(arguments[i], pch);
+        i++;
+        }
+    }
+
+
     switch (in[0]) {
         case 'q': 
             return 0;
         case 'a':
-            add_airport(global, in);
+            add_airport(global, arguments[1], arguments[2], arguments[3]);
             return 1;
         case 'l':
             list_airport(global, in);
@@ -56,38 +82,37 @@ int handler(state *global) {
     }
 }
 
-int add_airport(state *global, char *in) {
-    char id[MAX_IDENTIFIER];
-    char country[MAX_COUNTRY_CHARS];
-    char city[MAX_CITY_CHARS];
-
-    char * pch;
-    pch = strtok (in," ");
-    while (pch != NULL)
-    {
-        printf ("%s\n",pch);
-        pch = strtok (NULL, " ,.-");
-    }
-
-
+int add_airport(state *global, char *id, char *country, char *city) {
     if (global->airports_counter + 1 > MAX_AIRPORTS)
     {
         printf("too many airports");
         return 1;
     }
 
-    int len = sizeof(global->airports)/sizeof(global->airports[0]);
-    for (int i = 0; i < len; i++) {
+    for (int i = 0; i < sizeof(global->airports)/sizeof(global->airports[0]); i++) {
         if(!strcmp(global->airports[i].id, id)) {   
-            printf("found!");
+            printf("duplicate airport");
+            return 1;
+        }
+    }
+    
+    for (int i = 0; i > sizeof(id); i++) {
+        if (islower(id[i]) == 0){
+            printf("invalid airport ID");
+            return 1;
         }
     }
 
-    
+    strcpy(global->airports[global->airports_counter].id, id);
+    strcpy(global->airports[global->airports_counter].country, country);
+    strcpy(global->airports[global->airports_counter].city, city);
+    global->airports_counter++;
+    printf("airport %s", id);
     return 1;
 }
 
 int list_airport(state *global, char *in) {
+    
     return 1;
 }
 
