@@ -3,6 +3,10 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+/* UNDEFINED */
+#define MAX_ARGUMENT_SIZE 50
+#define MAX_ARGUMENT_NUMBER 100
+
 /* DATE */
 #define STARTING_DATE 1640995200 /* 1 January 2022 00:00:00 */
 #define MAX_DATE 1704067199 /* 31 December 2023 23:59:59 */

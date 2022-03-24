@@ -41,17 +41,16 @@ int handler(state *global) {
     */
 
     /* TODO: GARANTE QUE O ULTIMO TOKEN É PARSED CORRETAMENTE */
-    char arguments[100][100];
+    char * arguments[MAX_ARGUMENT_NUMBER] = {0};
     char * pch;
     pch = strtok (in," ");
-    strcpy(arguments[0], pch);
+    arguments[0] = pch;
     int i = 1;
     while (pch != NULL)
     {
         pch = strtok (NULL, " ");
         if (pch != NULL) {
-        strcpy(arguments[i], pch);
-        i++;
+            arguments[i++] = pch;
         }
     }
 
@@ -60,13 +59,16 @@ int handler(state *global) {
         case 'q': 
             return 0;
         case 'a':
+            printf("Antes de chamar: glob: %p, arguments: %p\n", global, arguments);
             add_airport(global, arguments[1], arguments[2], arguments[3]);
             return 1;
         case 'l':
-            list_airport(global, in);
+            printf("Antes de chamar: glob: %p, arguments: %p\n", global, arguments);
+            list_airport(global, arguments);
             return 1;
         case 'v':
-            add_list_flights(global, in);
+            printf("Antes de chamar: glob: %p, arguments: %p\n", global, arguments);
+            add_list_flights(global, &arguments);
             return 1;
         case 'p':
             departure_flights(global, in);
@@ -89,14 +91,16 @@ int add_airport(state *global, char *id, char *country, char *city) {
         return 1;
     }
 
-    for (int i = 0; i < sizeof(global->airports)/sizeof(global->airports[0]); i++) {
+    int i;
+    for (i = 0; i < sizeof(global->airports)/sizeof(global->airports[0]); i++) {
         if(!strcmp(global->airports[i].id, id)) {   
             printf("duplicate airport");
             return 1;
         }
     }
     
-    for (int i = 0; i > sizeof(id); i++) {
+    int j;
+    for (j = 0; j > sizeof(id); j++) {
         if (islower(id[i]) == 0){
             printf("invalid airport ID");
             return 1;
@@ -111,12 +115,36 @@ int add_airport(state *global, char *id, char *country, char *city) {
     return 1;
 }
 
-int list_airport(state *global, char *in) {
-    
+
+int list_airport(state *global, char** arguments) {
+    /*  We define the arguments array statically to avoid
+        dynamic memory allocation */
+
+    if (arguments[1] == NULL) {
+        /*  If the command has no arguments,
+            we sort alphabetically */
+        /*bubble_sort();*/
+        printf("chegamos aqui");
+        return 1;
+    } else {
+          /* We prepare the array for the biggest possible size
+            it *could* occupy if all the arguments were their max.
+            size. The 5 is to account for 4 whitespaces + a "#" */ 
+        char airport_listing[MAX_IDENTIFIER + MAX_CITY_CHARS + MAX_COUNTRY_CHARS + MAX_FLIGHTS + 5][MAX_ARGUMENT_NUMBER];
+        
+        int i;
+        for (i=0; i < sizeof(arguments)/sizeof(arguments[0]) - 1; i++) {
+
+            /* strcpy(airport_listing[i], ("%s %s %s #%d", ) 
+        }     
+    } */
+    printf(arguments);
+
     return 1;
 }
 
-int add_list_flights(state *global, char *in) {
+int add_list_flights(state *global, char** arguments) {
+    printf(arguments);
     return 1;
 }
 
@@ -158,3 +186,7 @@ int binary_search(int array[], int target, int low, int high) {
 }
 
 
+int bubble_sort(){
+    /*  TO IMPLEMENT */
+    return 1;
+}
