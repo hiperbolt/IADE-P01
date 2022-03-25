@@ -13,7 +13,7 @@
 
 /* AIRPORTS */
 #define MAX_AIRPORTS 40
-#define MAX_IDENTIFIER 3
+#define MAX_IDENTIFIER 4
 #define MAX_COUNTRY_CHARS 30
 #define MAX_CITY_CHARS 50
 
@@ -23,15 +23,6 @@
 #define MAX_FLIGHT_CODE 9999
 #define MIN_MAX_PASSENGERS 10
 #define MAX_MAX_PASSENGERS 100
-
-/* main.c */
-int handler();
-int add_airport();
-int list_airport();
-int add_list_flights();
-int departure_flights();
-int arrival_flights();
-int advance_date(); 
 
 /* data structs */
 
@@ -60,5 +51,18 @@ typedef struct
     int date;
 
 } state;
+
+/* main.c */
+int handler();
+int add_airport();
+int list_airport();
+int add_list_flights();
+int departure_flights();
+int arrival_flights();
+int advance_date();
+int binary_search();
+int bubble_sort();
+airport* helper_find_airport();
+int helper_find_departing_flights();
 
 #endif
