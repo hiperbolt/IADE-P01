@@ -19,6 +19,7 @@
 
 /* FLIGHTS */
 #define MAX_FLIGHTS 30000
+#define MAX_FLIGHT_CODE_CHARS 7
 #define MIN_FLIGHT_CODE 1
 #define MAX_FLIGHT_CODE 9999
 #define MIN_MAX_PASSENGERS 10
@@ -33,9 +34,9 @@ typedef struct {
 } airport;
 
 typedef struct {
-    char flight_code[6];
-    airport departure_airport;
-    airport arrival_airport;
+    char flight_code[MAX_FLIGHT_CODE_CHARS];
+    airport * departure_airport;
+    airport * arrival_airport;
     unsigned long departure_time;
     unsigned long arrival_time;
     int flight_duration;

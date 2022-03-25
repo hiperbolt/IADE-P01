@@ -147,15 +147,100 @@ int list_airport(state *global, char** arguments) {
 }
 
 int add_list_flights(state *global, char** arguments) {
-    if (arguments[1] == NULL) {
-        helper_sort_flight_creation_date();
+    if (arguments[1] == "NULL") {
+        /*helper_sort_flight_creation_date();*/
         return 1;
+    } else {
+        /*  We create a new flight */
+        char flight_code[MAX_FLIGHT_CODE_CHARS];
+        char departure_id[MAX_IDENTIFIER];
+        char arrival_id[MAX_IDENTIFIER];
+        /*  Its not good practice to have magic numbers not defined
+            in the header file, however, given that they are
+            formatting-related, it doesn't seem too bad. */
+        char departure_date[11]; /* "DD-MM-AAAA/0" takes 11 chars */
+        char departure_time[6]; /* "HH:MM/0" take 6 chars */
+        char flight_duration[6]; /* same format as departure_time */
+        int max_passengers;
+
+        strcpy(flight_code, arguments[1]);
+        strcpy(departure_id, arguments[2]);
+        strcpy(arrival_id, arguments[3]);
+        strcpy(departure_date, arguments[4]);
+        strcpy(departure_time, arguments[5]);
+        strcpy(flight_duration, arguments[6]);
+        max_passengers = atoi(arguments[7]);
+
+        /* First, we check for possible exceptions */
+        /*int i;
+        for (i = 0; i < MAX_FLIGHT_CODE_CHARS; i++) {
+            if (i < 2) {
+                if (islower(arguments[1][i]) != 0) {
+                    printf("invalid flight code");
+                    return 1;
+                }
+            }
+            if ()
+        }*/
+
+        int i;
+        for (i = 0; i < sizeof(global->flights)/sizeof(global->flights[0]); i++) {
+            if(!strcmp(global->flights[i].flight_code, arguments[1])) {   
+                printf("flight already exists\n");
+                return 1;
+            }
+        }
+
+        int departure_airport_exists = 0;
+        int arrival_airport_exists = 0;
+        for (i = 0; i < sizeof(global->airports)/sizeof(global->airports[0]); i++) {
+            if(!strcmp(global->airports[i].id, departure_id)) {   
+                departure_airport_exists = 1;
+            }
+            if(!strcmp(global->airports[i].id, departure_id)) {   
+                arrival_airport_exists = 1;
+            }
+        }
+        if (departure_airport_exists == 0) {
+            printf("%s: no such airport ID", departure_id);
+            return 1;
+        }
+        if (arrival_airport_exists == 0) {
+            printf("%s: no such airport ID", arrival_id);
+            return 1;
+        }
+
+        if (global->flights_counter + 1 > MAX_FLIGHTS)
+        {
+            printf("too many flights\n");
+            return 1;
+        }
+
+
+
+        airport * departure_airport_ptr = helper_find_airport(global, departure_id);
+        airport * arrival_airport_ptr = helper_find_airport(global, arrival_id);
+
+        /* TODO: convert dates and time */
+        int converted_departure_time = 0;
+        int arrival_time = 0;
+        int converted_flight_duration = 0;
+
+        strcpy(global->flights[global->flights_counter].flight_code, flight_code);
+        global->flights[global->flights_counter].departure_airport = departure_airport_ptr;
+        global->flights[global->flights_counter].arrival_airport = arrival_airport_ptr;
+        global->flights[global->flights_counter].departure_time = converted_departure_time;
+        global->flights[global->flights_counter].arrival_time = arrival_time;
+        global->flights[global->flights_counter].flight_duration = converted_flight_duration;
+        global->flights[global->flights_counter].max_passengers = max_passengers;
+        global->flights_counter++;
     }
     
     return 1;
 }
 
 int departure_flights(state *global, char *in) {
+
     return 1;
 }
 
@@ -229,7 +314,7 @@ int helper_find_departing_flights(state *global, airport *departing_airport) {
    int departing_flights = 0;
    for (i = 0; i < global->flights_counter; i++) {
         /* If they point to the same object */
-        if (&global->flights[i].departure_airport == departing_airport){
+        if (global->flights[i].departure_airport == departing_airport){
             departing_flights++;
         }
    }
