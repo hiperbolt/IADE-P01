@@ -349,27 +349,17 @@ int helper_find_departing_flights(state *global, airport *departing_airport) {
 }
 
 int convert_date(char * date) {
-    /* TODO: MIGRATE TO MORE EFFICIENT ALGORITHM */
-    char converted_in_arr[9]; /* DDMMAAAA in array takes 7 chars (because of terminating char) */
-    int i;
-    int j = 0;
-    for (i = 0; i < strlen(date); i++)
-    {
-        if (date[i] != 45) {
-            converted_in_arr[j] = date[i];
-            j++;
-        }
-    }
-
-    int date_converted = atoi(converted_in_arr);
-    return date_converted;
+    memmove(date+4, date+3, 2);
+    memmove(date+2, date, 2);
+    date[0] = '0';
+    date[1] = '0';
+    return atoi(date);
 }
 
 int convert_time(char * time) {
-    memmove(time+1, time, 2);
+    memmove(time+2, time, 2);
     time[0] = '0';
-    int date_converted = atoi(time);
-    return date_converted;
+    return atoi(time);
 }
 
 void date_to_human(char * buffer, int date) {
