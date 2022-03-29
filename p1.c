@@ -357,7 +357,7 @@ int convert_date(char * date) {
 }
 
 int convert_time(char * time) {
-    memmove(time+2, time, 2);
+    memmove(time+1, time, 2);
     time[0] = '0';
     return atoi(time);
 }
@@ -372,7 +372,7 @@ void date_to_human(char * buffer, int date) {
 
 void time_to_human(char * buffer, int time) {
     sprintf(buffer, "%04d", time);
-    memmove(buffer+2, buffer+1, strlen(buffer)-2);
+    memmove(buffer+3, buffer+2, 2);
     buffer[2] = ':';
 }
 
