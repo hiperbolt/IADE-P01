@@ -8,8 +8,8 @@
 #define MAX_ARGUMENT_NUMBER 100
 
 /* DATE */
-#define STARTING_DATE 1640995200 /* 1 January 2022 00:00:00 */
-#define MAX_DATE 1704067199 /* 31 December 2023 23:59:59 */
+#define STARTING_DATE 01012022 /* 1 January 2022 - DDMMAAAA */
+#define MAX_DATE 31122023 /* 31 December 2023 - DDMMAAAA */
 
 /* AIRPORTS */
 #define MAX_AIRPORTS 40
@@ -37,8 +37,8 @@ typedef struct {
     char flight_code[MAX_FLIGHT_CODE_CHARS];
     airport * departure_airport;
     airport * arrival_airport;
-    unsigned long departure_time;
-    unsigned long arrival_time;
+    int departure_date; /* DDMMAAAA */
+    int departure_time;   /* DDMMAAAA */
     int flight_duration;
     int max_passengers;
 } flight;
@@ -65,5 +65,9 @@ int binary_search();
 int bubble_sort();
 airport* helper_find_airport();
 int helper_find_departing_flights();
-
+int convert_date();
+int convert_time();
+void date_to_human();
+void time_to_human();
+int helper_get_int_len();
 #endif

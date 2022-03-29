@@ -147,8 +147,19 @@ int list_airport(state *global, char** arguments) {
 }
 
 int add_list_flights(state *global, char** arguments) {
-    if (arguments[1] == "NULL") {
-        /*helper_sort_flight_creation_date();*/
+    if (arguments[1] == NULL) {
+        int i;
+        for (i = 0; i < global->flights_counter; i++)
+        {
+            char human_date[11];
+            char human_time[5];
+            date_to_human(&human_date, global->flights[i].departure_date);
+            time_to_human(&human_time, global->flights[i].departure_time);
+            printf("%s %s %s %s %s\n", global->flights[i].flight_code, global->flights[i].departure_airport, global->flights[i].arrival_airport, human_date, human_time);
+            memset(&human_date[0], 0, sizeof(human_date));
+            memset(&human_time[0], 0, sizeof(human_time));
+        }
+        
         return 1;
     } else {
         /*  We create a new flight */
@@ -216,21 +227,19 @@ int add_list_flights(state *global, char** arguments) {
             return 1;
         }
 
-
-
         airport * departure_airport_ptr = helper_find_airport(global, departure_id);
         airport * arrival_airport_ptr = helper_find_airport(global, arrival_id);
 
         /* TODO: convert dates and time */
-        int converted_departure_time = 0;
-        int arrival_time = 0;
-        int converted_flight_duration = 0;
+        int converted_departure_date = convert_date(departure_date);
+        int converted_departure_time = convert_time(departure_time);
+        int converted_flight_duration = convert_time(flight_duration);
 
         strcpy(global->flights[global->flights_counter].flight_code, flight_code);
         global->flights[global->flights_counter].departure_airport = departure_airport_ptr;
         global->flights[global->flights_counter].arrival_airport = arrival_airport_ptr;
+        global->flights[global->flights_counter].departure_date = converted_departure_date;
         global->flights[global->flights_counter].departure_time = converted_departure_time;
-        global->flights[global->flights_counter].arrival_time = arrival_time;
         global->flights[global->flights_counter].flight_duration = converted_flight_duration;
         global->flights[global->flights_counter].max_passengers = max_passengers;
         global->flights_counter++;
@@ -319,4 +328,47 @@ int helper_find_departing_flights(state *global, airport *departing_airport) {
         }
    }
    return departing_flights;
+}
+
+int convert_date(char * date) {
+    char converted_in_arr[9]; /* DDMMAAAA in array takes 7 chars (because of terminating char) */
+    int i;
+    int j = 0;
+    for (i = 0; i < strlen(date); i++)
+    {
+        if (date[i] != 45) {
+            converted_in_arr[j] = date[i];
+            j++;
+        }
+    }
+
+    int date_converted = atoi(converted_in_arr);
+    return date_converted;
+}
+
+int convert_time(char * time) {
+    memmove(time+1, time, 2);
+    time[0] = '0';
+    int date_converted = atoi(time);
+    return date_converted;
+}
+
+void date_to_human(char * buffer, int date) {
+    sprintf(buffer, "%08d", date);
+    memmove(buffer+5, buffer+4, strlen(buffer)-4);
+    memmove(buffer+3, buffer+2, strlen(buffer)-2);
+    buffer[2] = '-';
+    buffer[5] = '-';
+}
+
+void time_to_human(char * buffer, int time) {
+    sprintf(buffer, "%04d", time);
+    memmove(buffer+2, buffer+1, strlen(buffer)-2);
+    buffer[2] = ':';
+}
+
+int helper_get_int_len (int number){
+  int len = 1;
+  while(number>9){len++; number/=10;}
+  return len;
 }
