@@ -259,7 +259,7 @@ int add_list_flights(state *global, char** arguments) {
 int departure_flights(state *global, char **arguments) {
     /*  We create an array of pointers to the flights
         in a specific airport */
-    char* flights_ptr_arr_temp[global->flights_counter];
+    flight* flights_ptr_arr_temp[global->flights_counter];
     int i;
     int number_of_flights = 0;
     for (i = 0; i < global->flights_counter; i++)
