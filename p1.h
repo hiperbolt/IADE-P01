@@ -61,13 +61,11 @@ int add_list_flights();
 int departure_flights();
 int arrival_flights();
 int advance_date();
-int binary_search();
-int bubble_sort();
+void bubble_sort();
 airport* helper_find_airport();
 int helper_find_departing_flights();
 int convert_date();
 int convert_time();
 void date_to_human();
 void time_to_human();
-int helper_get_int_len();
 #endif

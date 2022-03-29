@@ -69,13 +69,13 @@ int handler(state *global) {
             add_list_flights(global, arguments);
             return 1;
         case 'p':
-            departure_flights(global, in);
+            departure_flights(global, arguments);
             return 1;
         case 'c':
-            arrival_flights(global, in);
+            arrival_flights(global, arguments);
             return 1;
         case 't':
-            advance_date(global, in);
+            advance_date(global, arguments);
             return 1;
         default:
             return 1;
@@ -121,7 +121,15 @@ int list_airport(state *global, char** arguments) {
     if (arguments[1] == NULL) {
         /*  If the command has no arguments,
             we sort alphabetically */
-        /*bubble_sort();*/
+        /*  We first create an array of pointers to airport codes */
+        int i;
+        char * airport_codes_ptr_arr[global->airports_counter];
+        for (i = 0; i < global->airports_counter; i++)
+        {
+            airport_codes_ptr_arr[i] = &global->airports[i].id[0];
+        }
+        bubble_sort(airport_codes_ptr_arr, global->airports_counter);
+        /* printf() */
         return 1;
     } else {
           /* We prepare the array for the biggest possible size
@@ -152,7 +160,7 @@ int add_list_flights(state *global, char** arguments) {
         for (i = 0; i < global->flights_counter; i++)
         {
             char human_date[11];
-            char human_time[5];
+            char human_time[6];
             date_to_human(&human_date, global->flights[i].departure_date);
             time_to_human(&human_time, global->flights[i].departure_time);
             printf("%s %s %s %s %s\n", global->flights[i].flight_code, global->flights[i].departure_airport, global->flights[i].arrival_airport, human_date, human_time);
@@ -248,48 +256,58 @@ int add_list_flights(state *global, char** arguments) {
     return 1;
 }
 
-int departure_flights(state *global, char *in) {
-
-    return 1;
-}
-
-int arrival_flights(state *global, char *in) {
-    return 1;
-}
-
-int advance_date(state *global, char *in) {
-    return 1;
-}
-
-int binary_search(int array[], int target, int low, int high) {
-    /*
-        Abstract binary search auxiliary function.
-
-        Implements a generic iterative binary search
-        algorithm.
-
-    */
-     while (low <= high) {
-        int mid = low + (high - low) / 2;
-
-        if (array[mid] == target) {
-            return mid; }
-
-        if (array[mid] < target) {
-            low = mid + 1; }
-
-        else {
-            high = mid - 1; }
+int departure_flights(state *global, char **arguments) {
+    /*  We create an array of pointers to the flights
+        in a specific airport */
+    char* flights_ptr_arr_temp[global->flights_counter];
+    int i;
+    int number_of_flights = 0;
+    for (i = 0; i < global->flights_counter; i++)
+    {
+        /*  We check if the current indexed flight's departure airport
+            points to the argument provided airport */
+        if (global->flights[i].departure_airport == helper_find_airport(global, arguments[1]))
+        {
+            flights_ptr_arr_temp[number_of_flights] = &global->flights[i];
+            number_of_flights++;      
+        }       
     }
+    char* flights_ptr_arr[number_of_flights];
+    memcpy(flights_ptr_arr, flights_ptr_arr_temp, number_of_flights);
 
-  return -1; /* in case nothing was found */
-
+    /* helper_bubblesort_datetime(global, flights_ptr_arr); */
+    
+    return 1;
 }
 
-
-int bubble_sort(int idk) {
-    /*  TO IMPLEMENT */
+int arrival_flights(state *global, char **arguments) {
     return 1;
+}
+
+int advance_date(state *global, char **arguments) {
+    /* TODO: EXCEPTION */
+    global->date = convert_date(arguments[0]);
+    return 1;
+}
+
+void bubble_sort(char** arr, int n) {
+    int i;
+    char* t;
+    int j;
+    for (i = 0; i < n-1; i++)
+    {   
+        for (j = 0; j < n-i-1; j++)
+        {
+            if (*arr[j] > *arr[j+1])
+            {
+                t = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = t;
+            }
+            
+        }
+        
+    }
 }
 
 airport* helper_find_airport(state *global, char airport_name[]) {
@@ -331,6 +349,7 @@ int helper_find_departing_flights(state *global, airport *departing_airport) {
 }
 
 int convert_date(char * date) {
+    /* TODO: MIGRATE TO MORE EFFICIENT ALGORITHM */
     char converted_in_arr[9]; /* DDMMAAAA in array takes 7 chars (because of terminating char) */
     int i;
     int j = 0;
@@ -367,8 +386,5 @@ void time_to_human(char * buffer, int time) {
     buffer[2] = ':';
 }
 
-int helper_get_int_len (int number){
-  int len = 1;
-  while(number>9){len++; number/=10;}
-  return len;
-}
+
+
