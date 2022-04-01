@@ -163,12 +163,14 @@ int list_airport(state *global, char **arguments)
                exit from the previously obtained airport */
             int departing_flights = helper_find_departing_flights(global, airport_codes_ptr_arr[a]);
 
-            printf("%s %s %s #%s\n", airport_codes_ptr_arr[a]->id, airport_codes_ptr_arr[a]->country, airport_codes_ptr_arr[a]->city, departing_flights);
+            printf("%s %s %s #%d\n", airport_codes_ptr_arr[a]->id, airport_codes_ptr_arr[a]->country, airport_codes_ptr_arr[a]->city, departing_flights);
         }
         return 1;
     }
     else
     {
+        airport *current_airport;
+        int departing_flights;
         for (i = 1; arguments[i] != NULL; i++)
         {
             if (helper_find_airport(global, arguments[i]) == NULL)
@@ -178,11 +180,11 @@ int list_airport(state *global, char **arguments)
             }
             
             /* We receive the current airport's pointer from the auxiliary function */
-            airport *current_airport = helper_find_airport(global, arguments[i]);
+            current_airport = helper_find_airport(global, arguments[i]);
 
             /* We use another auxilary routine to calculate how many flights
                exit from the previously obtained airport */
-            int departing_flights = helper_find_departing_flights(global, current_airport);
+            departing_flights = helper_find_departing_flights(global, current_airport);
 
             printf("%s %s %s #%d\n", current_airport->id, current_airport->country, current_airport->city, departing_flights);
         }
@@ -213,19 +215,16 @@ int add_list_flights(state *global, char **arguments)
         airport *arrival_airport_ptr;
 
         date_struct converted_departure_date;
-        time_struct converted_departure_time;
-        time_struct converted_flight_duration;
+        time_struct converted_departure_time, converted_flight_duration;
 
         /*  We create a new flight */
-        char flight_code[MAX_FLIGHT_CODE_CHARS];
-        char departure_id[MAX_IDENTIFIER];
-        char arrival_id[MAX_IDENTIFIER];
+        char flight_code[MAX_FLIGHT_CODE_CHARS], departure_id[MAX_IDENTIFIER], arrival_id[MAX_IDENTIFIER];
         /*  Its not good practice to have magic numbers not defined
             in the header file, however, given that they are
             formatting-related, it doesn't seem too bad. */
-        char departure_date[11]; /* "DD-MM-AAAA/0" takes 11 chars */
-        char departure_time[6];  /* "HH:MM/0" take 6 chars */
-        char flight_duration[6]; /* same format as departure_time */
+        /* "DD-MM-AAAA/0" takes 11 chars */
+        /* "HH:MM/0" take 6 chars */
+        char departure_date[11], departure_time[6], flight_duration[6];
         int num_passengers;
 
         strcpy(flight_code, arguments[1]);
@@ -237,16 +236,25 @@ int add_list_flights(state *global, char **arguments)
         num_passengers = atoi(arguments[7]);
 
         /* First, we check for possible exceptions */
-        /*int i;
-        for (i = 0; i < MAX_FLIGHT_CODE_CHARS; i++) {
+
+        if (sizeof(flight_code) < 4 || sizeof(flight_code) > 7)
+        {
+            printf("invalid flight code");
+            return 1;
+        }
+        for (i = 0; i < sizeof(flight_code); i++) {
             if (i < 2) {
-                if (islower(arguments[1][i]) != 0) {
+                if (islower(flight_code[i]) != 0) {
+                    printf("invalid flight code");
+                    return 1;
+                }
+            } else {
+                if (isdigit(flight_code[i]) == 0) {
                     printf("invalid flight code");
                     return 1;
                 }
             }
-            if ()
-        }*/
+        }
 
         for (i = 0; i < sizeof(global->flights) / sizeof(global->flights[0]); i++)
         {
@@ -372,7 +380,6 @@ int arrival_flights(state *global, char **arguments)
 int advance_date(state *global, char **arguments)
 {
     date_struct new_date;
-    long new_epoch_date, current_epoch_date, year_ahead_epoch_date;
 
     /* We need to check if the date is in the past, of if it's too ahead in the future */
     convert_date(arguments[1], &new_date);
@@ -386,7 +393,7 @@ int advance_date(state *global, char **arguments)
     return 1;
 }
 
-void bubble_sort(void *arr, size_t type_size, size_t number_elements, long (*comparison)(const void *, const void *))
+void bubble_sort(void *arr, unsigned int type_size,unsigned int number_elements, long (*comparison)(const void *, const void *))
 {
     char *arr_bytes = arr;
     for (i = 0; i < number_elements - 1; i++)
@@ -502,19 +509,19 @@ long helper_flights_code_compare(const void * airport1, const void * airport2){
 long convert_to_epoch(int d, int m, int y){
     /* Recieves a date and transforms into unix epoch (ignoring leap years) */
     long epoch_time = 0;
-    for (i = EPOCH_YEAR; i < y; i++)
+    for (a = EPOCH_YEAR; a < y; a++)
     {
         epoch_time += 8760; /* 8760 hours in a normal calendar year */
     }
 
-    for (i = EPOCH_MONTH; i < m; i++)
+    for (a = EPOCH_MONTH; a < m; a++)
     {
-        if (i == 2)
+        if (a == 2)
         {
             /*February*/
             epoch_time += 672; /* 28*24 */
         } else {
-            if (i % 2 == 0)
+            if (a % 2 == 0)
             {
                 epoch_time += 720; /* 31*24 */
             } else {
@@ -523,7 +530,7 @@ long convert_to_epoch(int d, int m, int y){
         }
     }
 
-    for (i = EPOCH_DAY; i < d; i++)
+    for (a = EPOCH_DAY; a < d; a++)
     {
         epoch_time += 24;
     }    
@@ -533,7 +540,7 @@ long convert_to_epoch(int d, int m, int y){
 
 int validate_date(state* global, long new_epoch_date) {
     /* Returns 0 if valid, -1 if invalid */
-    long current_epoch_date, year_ahead_epoch_date, new_epoch_date;
+    long current_epoch_date, year_ahead_epoch_date;
 
     current_epoch_date = convert_to_epoch(global->current_date.day, global->current_date.month, global->current_date.year);
     year_ahead_epoch_date = convert_to_epoch(global->current_date.day, global->current_date.month, global->current_date.year+1);

@@ -87,7 +87,7 @@ int add_list_flights();
 int departure_flights();
 int arrival_flights();
 int advance_date();
-void bubble_sort(void *arr, size_t type_size, size_t number_elements, long (*comparison)(const void *, const void *));
+void bubble_sort(void *arr, unsigned int type_size, unsigned int number_elements, long (*comparison)(const void *, const void *));
 airport* helper_find_airport();
 int helper_find_departing_flights();
 void convert_date();
@@ -98,4 +98,5 @@ long helper_get_datetime();
 long helper_flights_datetime_compare();
 long helper_flights_code_compare(const void * airport1, const void * airport2);
 long convert_to_epoch(int d, int m, int y);
+int validate_date();
 #endif
