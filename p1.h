@@ -26,6 +26,18 @@
 #define MAX_MAX_PASSENGERS 100
 
 /* data structs */
+typedef struct
+{
+    int day;
+    int month;
+    int year;
+} date_struct;
+
+typedef struct
+{
+    int hour;
+    int min;
+} time_struct;
 
 typedef struct {
     char id[MAX_IDENTIFIER];
@@ -37,9 +49,9 @@ typedef struct {
     char flight_code[MAX_FLIGHT_CODE_CHARS];
     airport * departure_airport;
     airport * arrival_airport;
-    int departure_date; /* DDMMAAAA */
-    int departure_time;   /* DDMMAAAA */
-    int flight_duration;
+    date_struct departure_date; /* DDMMAAAA */
+    time_struct departure_time;   /* DDMMAAAA */
+    time_struct flight_duration;
     int max_passengers;
 } flight;
 
@@ -49,7 +61,7 @@ typedef struct
     int airports_counter;
     flight flights[MAX_FLIGHTS];
     int flights_counter;
-    int date;
+    date_struct current_date;
 
 } state;
 
@@ -64,8 +76,11 @@ int advance_date();
 void bubble_sort();
 airport* helper_find_airport();
 int helper_find_departing_flights();
-int convert_date();
-int convert_time();
+void convert_date();
+void convert_time();
 void date_to_human();
 void time_to_human();
+int helper_get_datetime();
+int helper_flights_datetime_compare();
+void helper_bubblesort_datetime();
 #endif

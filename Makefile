@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS= -g
+CFLAGS= -g -Wall -Wextra -Werror -ansi -pedantic
 p1: *.c *.h
 p1.zip: *.c *.h
 	zip p1.zip *.c *.h
