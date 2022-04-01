@@ -12,6 +12,8 @@
 #define EPOCH_DAY 01
 #define EPOCH_MONTH 01
 #define EPOCH_YEAR 1970
+#define EPOCH_HOUR 0
+#define EPOCH_MINUTE 0
 
 /* 1 January 2022 */
 #define STARTING_EPOCH 455520
@@ -95,8 +97,10 @@ void convert_time();
 void date_to_human();
 void time_to_human();
 long helper_get_datetime();
-long helper_flights_datetime_compare();
+long helper_flights_departure_datetime_compare();
+long helper_flights_arrival_datetime_compare();
 long helper_flights_code_compare(const void * airport1, const void * airport2);
 long convert_to_epoch(int d, int m, int y);
+void arrival_datetime_calculate();
 int validate_date();
 #endif
