@@ -8,8 +8,22 @@
 #define MAX_ARGUMENT_NUMBER 100
 
 /* DATE */
-#define STARTING_DATE 01012022 /* 1 January 2022 - DDMMAAAA */
-#define MAX_DATE 31122023 /* 31 December 2023 - DDMMAAAA */
+/* UNIX EPOCH */
+#define EPOCH_DAY 01
+#define EPOCH_MONTH 01
+#define EPOCH_YEAR 1970
+
+/* 1 January 2022 */
+#define STARTING_EPOCH 455520
+#define STARTING_DAY 01
+#define STARTING_MONTH 01
+#define STARTING_YEAR 2022
+
+/* 31 December 2023 */
+#define MAX_EPOCH 473016 
+#define MAX_DAY 31
+#define MAX_MONTH 12
+#define MAX_YEAR 2023
 
 /* AIRPORTS */
 #define MAX_AIRPORTS 40
@@ -73,14 +87,15 @@ int add_list_flights();
 int departure_flights();
 int arrival_flights();
 int advance_date();
-void bubble_sort();
+void bubble_sort(void *arr, size_t type_size, size_t number_elements, long (*comparison)(const void *, const void *));
 airport* helper_find_airport();
 int helper_find_departing_flights();
 void convert_date();
 void convert_time();
 void date_to_human();
 void time_to_human();
-int helper_get_datetime();
-int helper_flights_datetime_compare();
-void helper_bubblesort_datetime();
+long helper_get_datetime();
+long helper_flights_datetime_compare();
+long helper_flights_code_compare(const void * airport1, const void * airport2);
+long convert_to_epoch(int d, int m, int y);
 #endif

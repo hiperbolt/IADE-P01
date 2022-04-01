@@ -19,6 +19,9 @@ int main()
 {
 
     state global = {0};
+    global.current_date.day = STARTING_DAY;
+    global.current_date.month = STARTING_MONTH;
+    global.current_date.year = STARTING_YEAR;
 
     printf("Introduza comando: ");
 
@@ -142,22 +145,42 @@ int list_airport(state *global, char **arguments)
 
             We have to resort to statically sized buffers.
         */
-        char *airport_codes_ptr_arr[MAX_AIRPORTS];
+        airport * airport_codes_ptr_arr[MAX_AIRPORTS];
         for (a = 0; a < global->airports_counter; a++)
         {
-            airport_codes_ptr_arr[a] = &global->airports[a].id[0];
+            airport_codes_ptr_arr[a] = &(global->airports[a]);
         }
-        bubble_sort(airport_codes_ptr_arr, global->airports_counter);
+
+        bubble_sort(airport_codes_ptr_arr, sizeof(airport*), global->airports_counter, helper_flights_code_compare);
+        /*
+            We now print the airport codes in alphabetical order.
+            We use the helper function helper_flights_code_compare
+            to sort the array of pointers to airport codes.
+        */
+        for (a = 0; a < global->airports_counter; a++)
+        {
+            /* We use another auxilary routine to calculate how many flights
+               exit from the previously obtained airport */
+            int departing_flights = helper_find_departing_flights(global, airport_codes_ptr_arr[a]);
+
+            printf("%s %s %s #%s\n", airport_codes_ptr_arr[a]->id, airport_codes_ptr_arr[a]->country, airport_codes_ptr_arr[a]->city, departing_flights);
+        }
         return 1;
     }
     else
     {
         for (i = 1; arguments[i] != NULL; i++)
         {
+            if (helper_find_airport(global, arguments[i]) == NULL)
+            {
+                printf("%s: no such airport ID\n", arguments[1]);
+                return 1;
+            }
+            
             /* We receive the current airport's pointer from the auxiliary function */
             airport *current_airport = helper_find_airport(global, arguments[i]);
 
-            /* We use another auxilary routine to calculate how many airports
+            /* We use another auxilary routine to calculate how many flights
                exit from the previously obtained airport */
             int departing_flights = helper_find_departing_flights(global, current_airport);
 
@@ -186,9 +209,6 @@ int add_list_flights(state *global, char **arguments)
     }
     else
     {
-        int departure_airport_exists = 0;
-        int arrival_airport_exists = 0;
-
         airport *departure_airport_ptr;
         airport *arrival_airport_ptr;
 
@@ -206,7 +226,7 @@ int add_list_flights(state *global, char **arguments)
         char departure_date[11]; /* "DD-MM-AAAA/0" takes 11 chars */
         char departure_time[6];  /* "HH:MM/0" take 6 chars */
         char flight_duration[6]; /* same format as departure_time */
-        int max_passengers;
+        int num_passengers;
 
         strcpy(flight_code, arguments[1]);
         strcpy(departure_id, arguments[2]);
@@ -214,7 +234,7 @@ int add_list_flights(state *global, char **arguments)
         strcpy(departure_date, arguments[4]);
         strcpy(departure_time, arguments[5]);
         strcpy(flight_duration, arguments[6]);
-        max_passengers = atoi(arguments[7]);
+        num_passengers = atoi(arguments[7]);
 
         /* First, we check for possible exceptions */
         /*int i;
@@ -237,23 +257,12 @@ int add_list_flights(state *global, char **arguments)
             }
         }
 
-        for (i = 0; i < sizeof(global->airports) / sizeof(global->airports[0]); i++)
-        {
-            if (!strcmp(global->airports[i].id, departure_id))
-            {
-                departure_airport_exists = 1;
-            }
-            if (!strcmp(global->airports[i].id, departure_id))
-            {
-                arrival_airport_exists = 1;
-            }
-        }
-        if (departure_airport_exists == 0)
+        if (helper_find_airport(global, departure_id) == NULL)
         {
             printf("%s: no such airport ID", departure_id);
             return 1;
         }
-        if (arrival_airport_exists == 0)
+        if (helper_find_airport(global, arrival_id) == NULL)
         {
             printf("%s: no such airport ID", arrival_id);
             return 1;
@@ -272,21 +281,36 @@ int add_list_flights(state *global, char **arguments)
         convert_time(departure_time, &converted_departure_time);
         convert_time(flight_duration, &converted_flight_duration);
 
+        if (validate_date(global, convert_to_epoch(converted_departure_date.day, converted_departure_date.month, converted_departure_date.year)))
+        {
+            printf("invalid date\n");
+            return 1;
+        }
+        if (converted_flight_duration.hour > 12)
+        {
+            printf("invalid duration\n");
+            return 1;
+        }
+        if (num_passengers < 10 || num_passengers > 100)
+        {
+            printf("invalid capacity\n");
+            return 1;
+        }
+
         strcpy(global->flights[global->flights_counter].flight_code, flight_code);
         global->flights[global->flights_counter].departure_airport = departure_airport_ptr;
         global->flights[global->flights_counter].arrival_airport = arrival_airport_ptr;
         global->flights[global->flights_counter].departure_date = converted_departure_date;
         global->flights[global->flights_counter].departure_time = converted_departure_time;
         global->flights[global->flights_counter].flight_duration = converted_flight_duration;
-        global->flights[global->flights_counter].max_passengers = max_passengers;
+        global->flights[global->flights_counter].max_passengers = num_passengers;
         global->flights_counter++;
     }
-
     return 1;
 }
 
 int departure_flights(state *global, char **arguments)
-{
+{   
     /*  We create an array of pointers to the flights
         in a specific airport.
         As explained previously, C90 does not allow VLA,
@@ -295,6 +319,14 @@ int departure_flights(state *global, char **arguments)
     */
     flight *flights_ptr_arr[MAX_FLIGHTS];
     int number_of_flights = 0;
+
+    /* We check for a possible "no such airport" exception */
+    if (helper_find_airport(global, arguments[1]) == NULL)
+    {
+        printf("%s: no such airport ID", arguments[1]);
+        return 1;
+    } 
+
     for (a = 0; a < global->flights_counter; a++)
     {
         /*  We check if the current indexed flight's departure airport
@@ -306,41 +338,67 @@ int departure_flights(state *global, char **arguments)
         }
     }
 
-    helper_bubblesort_datetime(global, flights_ptr_arr, number_of_flights);
-
+    bubble_sort(flights_ptr_arr, sizeof(flight *), number_of_flights, helper_flights_datetime_compare);
     return 1;
 }
 
 int arrival_flights(state *global, char **arguments)
 {
-    printf("%s", global->airports[0].id);
-    printf("%s", arguments[0]);
+    flight *flights_ptr_arr[MAX_FLIGHTS];
+    int number_of_flights = 0;
+
+    /* We check for a possible "no such airport" exception */
+    if (helper_find_airport(global, arguments[1]) == NULL)
+    {
+        printf("%s: no such airport ID", arguments[1]);
+        return 1;
+    }
+
+    for (a = 0; a < global->flights_counter; a++)
+    {
+        /*  We check if the current indexed flight's departure airport
+            points to the argument provided airport */
+        if (global->flights[a].arrival_airport == helper_find_airport(global, arguments[1]))
+        {
+            flights_ptr_arr[number_of_flights] = &global->flights[a];
+            number_of_flights++;
+        }
+    }
+
+    bubble_sort(flights_ptr_arr, sizeof(flight *), number_of_flights, helper_flights_datetime_compare);
     return 1;
 }
 
 int advance_date(state *global, char **arguments)
 {
-    /* TODO: everything */
+    date_struct new_date;
+    long new_epoch_date, current_epoch_date, year_ahead_epoch_date;
+
+    /* We need to check if the date is in the past, of if it's too ahead in the future */
+    convert_date(arguments[1], &new_date);
+    if (validate_date(global, convert_to_epoch(new_date.day, new_date.month, new_date.year)))
+    {
+        printf("invalid date\n");
+        return 1;
+    }
+    
+    global->current_date = new_date;
     return 1;
 }
 
-void bubble_sort(void *arr, size_t type_size, int number_elements, int (*comparison)(const void *, const void *))
+void bubble_sort(void *arr, size_t type_size, size_t number_elements, long (*comparison)(const void *, const void *))
 {
-    /*
-        If comparison = 1, switch
-        If comparison = 0, hold.
-    */
-
+    char *arr_bytes = arr;
     for (i = 0; i < number_elements - 1; i++)
     {
         for (j = 0; j < number_elements - i - 1; j++)
         {
-            if (comparison(arr + j * type_size, arr + (j + 1) * type_size) > 0)
+            if (comparison(arr_bytes + j * type_size, arr_bytes + (j + 1) * type_size) > 0)
             {
                 void *temp = malloc(type_size);
-                memcpy(temp, (arr + j * type_size), type_size);
-                memcpy((arr + j * type_size), (arr + (j+1) * type_size), type_size);
-                memcpy((arr + (j+1) * type_size), temp, type_size);
+                memcpy(temp, arr_bytes + j * type_size, type_size);
+                memcpy(arr_bytes + j * type_size, arr_bytes + (j + 1) * type_size, type_size);
+                memcpy(arr_bytes + (j + 1) * type_size, temp, type_size);
                 free(temp);
             }
         }
@@ -362,7 +420,7 @@ airport *helper_find_airport(state *global, char airport_name[])
             return &global->airports[i];
         }
     }
-    return &global->airports[MAX_AIRPORTS];
+    return NULL;
     /*
         A possible optimization would be to keep track of
         previously found airports so that some comparison
@@ -420,21 +478,69 @@ void time_to_human(char *buffer, time_struct *time_strct)
     sprintf(buffer, "%02d:%02d", time_strct->hour, time_strct->min);
 }
 
-int helper_get_datetime(date_struct date, time_struct time)
+long helper_get_datetime(date_struct date, time_struct time)
 {
-    return ((date.year * 100000000) + (date.month * 1000000) + (date.day * 10000) + (time.hour * 100) + time.min);
+    return (((long)date.year * 100000000) + ((long)date.month * 1000000) + ((long)date.day * 10000) + ((long)time.hour * 100) + (long)time.min);
 }
 
-int helper_flights_datetime_compare(const void *flight1, const void *flight2)
+long helper_flights_datetime_compare(const void *flight1, const void *flight2)
 {
     /*  Returns >0 if the datetime of flight1 is larger than flight2 */
-    const flight *casted_flight1 = flight1;
-    const flight *casted_flight2 = flight2;
-    return helper_get_datetime(casted_flight1->departure_date, casted_flight1->departure_time) - helper_get_datetime(casted_flight2->departure_date, casted_flight2->departure_time);
+    const flight *casted_flight1 = *(flight **)flight1;
+    const flight *casted_flight2 = *(flight **)flight2;
+    const long result = helper_get_datetime(casted_flight1->departure_date, casted_flight1->departure_time) - helper_get_datetime(casted_flight2->departure_date, casted_flight2->departure_time);
+    printf("%s %s %ld\n", casted_flight1->flight_code, casted_flight2->flight_code, result);
+    return result;
 }
 
-void helper_bubblesort_datetime(state *global, flight **flights_arr, int number_of_flights)
-{
-    bubble_sort(flights_arr, sizeof(flight*), number_of_flights, helper_flights_datetime_compare);
-    printf(flights_arr);
+long helper_flights_code_compare(const void * airport1, const void * airport2){
+    const airport * casted_airport1 = * (airport **)airport1;
+    const airport * casted_airport2 = * (airport **)airport2;
+    return strncmp(casted_airport1->id, casted_airport2->id, MAX_IDENTIFIER);
+}
+
+long convert_to_epoch(int d, int m, int y){
+    /* Recieves a date and transforms into unix epoch (ignoring leap years) */
+    long epoch_time = 0;
+    for (i = EPOCH_YEAR; i < y; i++)
+    {
+        epoch_time += 8760; /* 8760 hours in a normal calendar year */
+    }
+
+    for (i = EPOCH_MONTH; i < m; i++)
+    {
+        if (i == 2)
+        {
+            /*February*/
+            epoch_time += 672; /* 28*24 */
+        } else {
+            if (i % 2 == 0)
+            {
+                epoch_time += 720; /* 31*24 */
+            } else {
+                epoch_time += 744; /* 30*24 */
+            }  
+        }
+    }
+
+    for (i = EPOCH_DAY; i < d; i++)
+    {
+        epoch_time += 24;
+    }    
+    
+    return epoch_time;
+}
+
+int validate_date(state* global, long new_epoch_date) {
+    /* Returns 0 if valid, -1 if invalid */
+    long current_epoch_date, year_ahead_epoch_date, new_epoch_date;
+
+    current_epoch_date = convert_to_epoch(global->current_date.day, global->current_date.month, global->current_date.year);
+    year_ahead_epoch_date = convert_to_epoch(global->current_date.day, global->current_date.month, global->current_date.year+1);
+
+    if (new_epoch_date < STARTING_EPOCH || new_epoch_date < current_epoch_date || new_epoch_date > year_ahead_epoch_date || new_epoch_date > MAX_EPOCH)
+    {
+        return -1;
+    }
+    return 0;
 }
